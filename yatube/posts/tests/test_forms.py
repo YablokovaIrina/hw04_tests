@@ -18,6 +18,7 @@ POST_TEXT = 'Я все успею до жесткого дедлайна'
 POST_TEXT_NEW = 'У меня получилось сдать все работы во время!'
 REDIRECT_URL = f'{LOGIN_URL}?next={CREATE_POST_URL}'
 
+
 class PostFormTests(TestCase):
     @classmethod
     def setUpClass(cls):

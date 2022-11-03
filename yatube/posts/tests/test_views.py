@@ -33,7 +33,7 @@ class PostPagesTests(TestCase):
             group=cls.group,
         )
         cls.POST_DETAIL_URL = reverse('posts:post_detail', args=[cls.post.id])
-        
+
     def setUp(self):
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
@@ -44,7 +44,7 @@ class PostPagesTests(TestCase):
             self.assertEqual(post.author, self.post.author)
             self.assertEqual(post.group.id, self.post.group.id)
             self.assertEqual(post.id, self.post.id)
-    
+
     def test_show_correct_contex(self):
         urls = [
             INDEX_URL,
@@ -56,7 +56,7 @@ class PostPagesTests(TestCase):
                 response = self.authorized_client.get(url)
                 self.assertEqual(len(response.context['page_obj']), 1)
                 self.check_post_info(response.context['page_obj'][0])
-                        
+        
     def test_index_page_show_correct_context(self):
         response = self.authorized_client.get(INDEX_URL)
         self.assertEqual(len(response.context['page_obj']), 1)
@@ -85,8 +85,8 @@ class PostPagesTests(TestCase):
         response = self.authorized_client.get(
             self.POST_DETAIL_URL)
         self.check_post_info(response.context['post'])
-        
-        
+
+
 class PaginatorViewsTest(TestCase):
     @classmethod
     def setUpClass(cls):
@@ -101,9 +101,9 @@ class PaginatorViewsTest(TestCase):
         )
         cls.POSTS_NUM = POSTS_ON_PAGE + POSTS_ON_OTHER_PAGE
         Post.objects.bulk_create(
-                Post(text=f'Post {i}', author=cls.user, group=cls.group)
-                for i in range(cls.POSTS_NUM)
-            )
+            Post(text=f'Post {i}', author=cls.user, group=cls.group)
+            for i in range(cls.POSTS_NUM)
+        )
 
     def setUp(self):
         self.guest_client = Client()
