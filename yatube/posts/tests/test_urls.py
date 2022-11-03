@@ -60,7 +60,7 @@ class PostURLTests(TestCase):
             [POST_CREATE_URL, self.authorized_client, 200],
             [self.POST_EDIT_URL, self.authorized_client, 302],
             [self.POST_EDIT_URL, self.authorized_client_author, 200],
-            ['/unexisting_page/', self.guest_client, 404],   
+            ['/unexisting_page/', self.guest_client, 404],
         ]
         for url, client, code in urls_names:
             with self.subTest(url=url, client=client, code=code):
@@ -80,17 +80,17 @@ class PostURLTests(TestCase):
         template_url_names = [
             [INDEX_URL, self.guest_client, 'posts/index.html'],
             [PROFILE_URL, self.guest_client, 'posts/profile.html'],
-            [self.POST_DETAIL_URL, 
-             self.guest_client, 
+            [self.POST_DETAIL_URL,
+             self.guest_client,
              'posts/post_detail.html'],
-            [POST_CREATE_URL, 
-             self.authorized_client_author, 
+            [POST_CREATE_URL,
+             self.authorized_client_author,
              'posts/create_post.html'],
-            [GROUP_LIST_URL, 
-             self.authorized_client_author, 
+            [GROUP_LIST_URL,
+             self.authorized_client_author,
              'posts/group_list.html'],
-            [self.POST_EDIT_URL, 
-             self.authorized_client_author, 
+            [self.POST_EDIT_URL,
+             self.authorized_client_author,
              'posts/create_post.html']
         ]
         for url, client, template in template_url_names:
