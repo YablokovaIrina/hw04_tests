@@ -4,10 +4,11 @@ from django.shortcuts import render, get_object_or_404, redirect
 
 from .forms import PostForm
 from .models import Post, Group, User
+from yatube.settings import POSTS_ON_PAGE
 
 
 def page_obj(queryset, request):
-    return Paginator(queryset, 10).get_page(request.GET.get('page'))
+    return Paginator(queryset, POSTS_ON_PAGE).get_page(request.GET.get('page'))
 
 
 def index(request):

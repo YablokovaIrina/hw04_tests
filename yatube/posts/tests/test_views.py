@@ -1,26 +1,39 @@
-from django import forms
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from ..models import Group, Post, User
+from yatube.settings import POSTS_ON_PAGE
+from posts.models import Group, Post, User
+
+GROUP_TITLE = 'Группа1'
+GROUP_SLUG = 'test_slug'
+GROUP_DESCRIPTION = 'Тестовая группа 1'
+POST_TEXT = 'Тестовый текст'
+USERNAME = 'Username'
+
+INDEX_URL = reverse('posts:index')
+GROUP_LIST_URL = reverse('posts:group_list', args=[GROUP_SLUG])
+PROFILE_URL = reverse('posts:profile', args=[USERNAME])
+POSTS_ON_OTHER_PAGE = 3
+SECOND_PAGE = '?page=2'
 
 
 class PostPagesTests(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.user = User.objects.create_user(username='author')
+        cls.user = User.objects.create_user(username=USERNAME)
         cls.group = Group.objects.create(
-            title='Тестовая группа',
-            slug='testslug',
-            description='Тестовое описание группы',
+            title=GROUP_TITLE,
+            slug=GROUP_SLUG,
+            description=GROUP_DESCRIPTION,
         )
         cls.post = Post.objects.create(
-            text='Тестовый текст поста',
+            text=POST_TEXT,
             author=cls.user,
             group=cls.group,
         )
-
+        cls.POST_DETAIL_URL = reverse('posts:post_detail', args=[cls.post.id])
+        
     def setUp(self):
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
@@ -30,88 +43,81 @@ class PostPagesTests(TestCase):
             self.assertEqual(post.text, self.post.text)
             self.assertEqual(post.author, self.post.author)
             self.assertEqual(post.group.id, self.post.group.id)
-
-    def test_forms_show_correct(self):
-        context = {
-            reverse('posts:post_create'),
-            reverse('posts:post_edit', kwargs={'post_id': self.post.id, }),
-        }
-        for reverse_page in context:
-            with self.subTest(reverse_page=reverse_page):
-                response = self.authorized_client.get(reverse_page)
-                self.assertIsInstance(
-                    response.context['form'].fields['text'],
-                    forms.fields.CharField)
-                self.assertIsInstance(
-                    response.context['form'].fields['group'],
-                    forms.fields.ChoiceField)
-
+            self.assertEqual(post.id, self.post.id)
+    
+    def test_show_correct_contex(self):
+        urls = [
+            INDEX_URL,
+            GROUP_LIST_URL,
+            PROFILE_URL,
+        ]
+        for url in urls:
+            with self.subTest(url=url):
+                response = self.authorized_client.get(url)
+                self.assertEqual(len(response.context['page_obj']), 1)
+                self.check_post_info(response.context['page_obj'][0])
+                        
     def test_index_page_show_correct_context(self):
-        response = self.authorized_client.get(reverse('posts:index'))
+        response = self.authorized_client.get(INDEX_URL)
+        self.assertEqual(len(response.context['page_obj']), 1)
         self.check_post_info(response.context['page_obj'][0])
 
     def test_groups_page_show_correct_context(self):
         response = self.authorized_client.get(
-            reverse(
-                'posts:group_list',
-                kwargs={'slug': self.group.slug})
+            GROUP_LIST_URL
         )
         self.assertEqual(response.context['group'], self.group)
+        self.assertEqual(self.group.title, GROUP_TITLE)
+        self.assertEqual(self.group.slug, GROUP_SLUG)
+        self.assertEqual(self.group.description, GROUP_DESCRIPTION)
+        self.assertEqual(len(response.context['page_obj']), 1)
         self.check_post_info(response.context['page_obj'][0])
 
     def test_profile_page_show_correct_context(self):
         response = self.authorized_client.get(
-            reverse(
-                'posts:profile',
-                kwargs={'username': self.user.username}))
+            PROFILE_URL
+        )
         self.assertEqual(response.context['author'], self.user)
+        self.assertEqual(len(response.context['page_obj']), 1)
         self.check_post_info(response.context['page_obj'][0])
 
     def test_detail_page_show_correct_context(self):
         response = self.authorized_client.get(
-            reverse(
-                'posts:post_detail',
-                kwargs={'post_id': self.post.id}))
+            self.POST_DETAIL_URL)
         self.check_post_info(response.context['post'])
-
-
+        
+        
 class PaginatorViewsTest(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
         cls.user = User.objects.create(
-            username='author',
+            username=USERNAME,
         )
         cls.group = Group.objects.create(
-            title='Тестовое название группы',
-            slug='testslug',
-            description='Тестовое описание группы',
+            title=GROUP_TITLE,
+            slug=GROUP_SLUG,
+            description=GROUP_DESCRIPTION,
         )
-        for i in range(13):
-            Post.objects.create(
-                text=f'Пост {i}',
-                author=cls.user,
-                group=cls.group
+        cls.POSTS_NUM = POSTS_ON_PAGE + POSTS_ON_OTHER_PAGE
+        Post.objects.bulk_create(
+                Post(text=f'Post {i}', author=cls.user, group=cls.group)
+                for i in range(cls.POSTS_NUM)
             )
 
     def setUp(self):
         self.guest_client = Client()
 
     def test_paginator_on_pages(self):
-        posts_on_first_page = 10
-        posts_on_second_page = 3
-        url_pages = [
-            reverse('posts:index'),
-            reverse('posts:group_list', kwargs={'slug': self.group.slug}),
-            reverse('posts:profile', kwargs={'username': self.user.username}),
-        ]
-        for reverse_ in url_pages:
-            with self.subTest(reverse_=reverse_):
-                self.assertEqual(len(self.guest_client.get(
-                    reverse_).context.get('page_obj')),
-                    posts_on_first_page
-                )
-                self.assertEqual(len(self.guest_client.get(
-                    reverse_ + '?page=2').context.get('page_obj')),
-                    posts_on_second_page
-                )
+        pages_and_records = {
+            INDEX_URL: POSTS_ON_PAGE,
+            INDEX_URL + SECOND_PAGE: self.POSTS_NUM - POSTS_ON_PAGE,
+            GROUP_LIST_URL: POSTS_ON_PAGE,
+            GROUP_LIST_URL + SECOND_PAGE: self.POSTS_NUM - POSTS_ON_PAGE,
+            PROFILE_URL: POSTS_ON_PAGE,
+            PROFILE_URL + SECOND_PAGE: self.POSTS_NUM - POSTS_ON_PAGE,
+        }
+        for page, records in pages_and_records.items():
+            with self.subTest(page=page):
+                response = self.guest_client.get(page)
+                self.assertEqual(len(response.context['page_obj']), records)

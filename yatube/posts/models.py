@@ -13,6 +13,10 @@ class Group(models.Model):
         verbose_name='Идентификатор'
     )
     description = models.TextField(verbose_name='Описание группы')
+    
+    class Meta:
+        verbose_name_plural = 'Группы'
+        verbose_name = 'Группу'
 
     def __str__(self):
         return self.title
