@@ -13,9 +13,10 @@ INDEX_URL = reverse('posts:index')
 POST_CREATE_URL = reverse('posts:post_create')
 PROFILE_URL = reverse('posts:profile', kwargs={'username': USERNAME})
 GROUP_LIST_URL = reverse('posts:group_list', kwargs={'slug': GROUP_SLUG})
-LOGIN_URL = reverse('users:login')                      
+LOGIN_URL = reverse('users:login')
 
 POST_CREATE_REDIRECT = f'{LOGIN_URL}?next={POST_CREATE_URL}'
+
 
 class PostURLTests(TestCase):
     @classmethod
@@ -74,15 +75,23 @@ class PostURLTests(TestCase):
         for url, client, redirect in urls_redirect:
             with self.subTest(url=url, client=client, redirect=redirect):
                 self.assertRedirects(client.get(url), redirect)
-                
+
     def test_urls_uses_correct_templates(self):
         template_url_names = [
             [INDEX_URL, self.guest_client, 'posts/index.html'],
             [PROFILE_URL, self.guest_client, 'posts/profile.html'],
-            [self.POST_DETAIL_URL, self.guest_client, 'posts/post_detail.html'],
-            [POST_CREATE_URL, self.authorized_client_author, 'posts/create_post.html'],
-            [GROUP_LIST_URL, self.authorized_client_author, 'posts/group_list.html'],
-            [self.POST_EDIT_URL, self.authorized_client_author, 'posts/create_post.html']
+            [self.POST_DETAIL_URL, 
+             self.guest_client, 
+             'posts/post_detail.html'],
+            [POST_CREATE_URL, 
+             self.authorized_client_author, 
+             'posts/create_post.html'],
+            [GROUP_LIST_URL, 
+             self.authorized_client_author, 
+             'posts/group_list.html'],
+            [self.POST_EDIT_URL, 
+             self.authorized_client_author, 
+             'posts/create_post.html']
         ]
         for url, client, template in template_url_names:
             with self.subTest(url=url, client=client, template=template):

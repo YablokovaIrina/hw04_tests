@@ -51,7 +51,7 @@ class PostFormTests(TestCase):
 
     def test_authorized_client_create_post(self):
         Post.objects.all().delete()
-        posts_count = Post.objects.count() 
+        posts_count = Post.objects.count()
         form_data = {
             'text': POST_TEXT,
             'group': self.group.id,

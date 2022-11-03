@@ -56,7 +56,7 @@ class PostPagesTests(TestCase):
                 response = self.authorized_client.get(url)
                 self.assertEqual(len(response.context['page_obj']), 1)
                 self.check_post_info(response.context['page_obj'][0])
-        
+
     def test_index_page_show_correct_context(self):
         response = self.authorized_client.get(INDEX_URL)
         self.assertEqual(len(response.context['page_obj']), 1)
