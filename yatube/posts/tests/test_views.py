@@ -35,6 +35,7 @@ class PostPagesTests(TestCase):
         cls.POST_DETAIL_URL = reverse('posts:post_detail', args=[cls.post.id])
 
     def setUp(self):
+        self.guest_client = Client()
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
 
@@ -57,11 +58,6 @@ class PostPagesTests(TestCase):
                 self.assertEqual(len(response.context['page_obj']), 1)
                 self.check_post_info(response.context['page_obj'][0])
 
-    def test_index_page_show_correct_context(self):
-        response = self.authorized_client.get(INDEX_URL)
-        self.assertEqual(len(response.context['page_obj']), 1)
-        self.check_post_info(response.context['page_obj'][0])
-
     def test_groups_page_show_correct_context(self):
         response = self.authorized_client.get(
             GROUP_LIST_URL
@@ -70,52 +66,32 @@ class PostPagesTests(TestCase):
         self.assertEqual(self.group.title, GROUP_TITLE)
         self.assertEqual(self.group.slug, GROUP_SLUG)
         self.assertEqual(self.group.description, GROUP_DESCRIPTION)
-        self.assertEqual(len(response.context['page_obj']), 1)
-        self.check_post_info(response.context['page_obj'][0])
 
     def test_profile_page_show_correct_context(self):
         response = self.authorized_client.get(
             PROFILE_URL
         )
         self.assertEqual(response.context['author'], self.user)
-        self.assertEqual(len(response.context['page_obj']), 1)
-        self.check_post_info(response.context['page_obj'][0])
 
     def test_detail_page_show_correct_context(self):
         response = self.authorized_client.get(
             self.POST_DETAIL_URL)
         self.check_post_info(response.context['post'])
 
-
-class PaginatorViewsTest(TestCase):
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        cls.user = User.objects.create(
-            username=USERNAME,
-        )
-        cls.group = Group.objects.create(
-            title=GROUP_TITLE,
-            slug=GROUP_SLUG,
-            description=GROUP_DESCRIPTION,
-        )
-        cls.POSTS_NUM = POSTS_ON_PAGE + POSTS_ON_OTHER_PAGE
-        Post.objects.bulk_create(
-            Post(text=f'Post {i}', author=cls.user, group=cls.group)
-            for i in range(cls.POSTS_NUM)
-        )
-
-    def setUp(self):
-        self.guest_client = Client()
-
     def test_paginator_on_pages(self):
+        Post.objects.all().delete()
+        POSTS_NUM = POSTS_ON_PAGE + POSTS_ON_OTHER_PAGE
+        Post.objects.bulk_create(
+            Post(text=f'Post {i}', author=self.user, group=self.group)
+            for i in range(POSTS_NUM)
+        )
         pages_and_records = {
             INDEX_URL: POSTS_ON_PAGE,
-            INDEX_URL + SECOND_PAGE: self.POSTS_NUM - POSTS_ON_PAGE,
+            INDEX_URL + SECOND_PAGE: POSTS_ON_OTHER_PAGE,
             GROUP_LIST_URL: POSTS_ON_PAGE,
-            GROUP_LIST_URL + SECOND_PAGE: self.POSTS_NUM - POSTS_ON_PAGE,
+            GROUP_LIST_URL + SECOND_PAGE: POSTS_ON_OTHER_PAGE,
             PROFILE_URL: POSTS_ON_PAGE,
-            PROFILE_URL + SECOND_PAGE: self.POSTS_NUM - POSTS_ON_PAGE,
+            PROFILE_URL + SECOND_PAGE: POSTS_ON_OTHER_PAGE,
         }
         for page, records in pages_and_records.items():
             with self.subTest(page=page):

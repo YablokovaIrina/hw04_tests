@@ -43,24 +43,24 @@ class PostURLTests(TestCase):
         cls.POST_EDIT_REDIRECT = f'{LOGIN_URL}?next={cls.POST_EDIT_URL}'
 
     def setUp(self):
-        self.guest_client = Client()
-        self.authorized_client = Client()
-        self.authorized_client.force_login(self.user2)
-        self.authorized_client_author = Client()
-        self.authorized_client_author.force_login(self.user)
+        self.guest = Client()
+        self.another = Client()
+        self.another.force_login(self.user2)
+        self.author = Client()
+        self.author.force_login(self.user)
 
     def test_pages_urls_at_desired_location_posts_for_users(self):
         urls_names = [
-            [INDEX_URL, self.guest_client, 200],
-            [GROUP_LIST_URL, self.guest_client, 200],
-            [self.POST_DETAIL_URL, self.guest_client, 200],
-            [POST_CREATE_URL, self.guest_client, 302],
-            [self.POST_EDIT_URL, self.guest_client, 302],
-            [PROFILE_URL, self.authorized_client, 200],
-            [POST_CREATE_URL, self.authorized_client, 200],
-            [self.POST_EDIT_URL, self.authorized_client, 302],
-            [self.POST_EDIT_URL, self.authorized_client_author, 200],
-            ['/unexisting_page/', self.guest_client, 404],
+            [INDEX_URL, self.guest, 200],
+            [GROUP_LIST_URL, self.guest, 200],
+            [self.POST_DETAIL_URL, self.guest, 200],
+            [POST_CREATE_URL, self.guest, 302],
+            [self.POST_EDIT_URL, self.guest, 302],
+            [PROFILE_URL, self.another, 200],
+            [POST_CREATE_URL, self.another, 200],
+            [self.POST_EDIT_URL, self.another, 302],
+            [self.POST_EDIT_URL, self.author, 200],
+            ['/unexisting_page/', self.guest, 404],
         ]
         for url, client, code in urls_names:
             with self.subTest(url=url, client=client, code=code):
@@ -68,9 +68,9 @@ class PostURLTests(TestCase):
 
     def test_urls_redirects_posts(self):
         urls_redirect = [
-            [POST_CREATE_URL, self.guest_client, POST_CREATE_REDIRECT],
-            [self.POST_EDIT_URL, self.guest_client, self.POST_EDIT_REDIRECT],
-            [self.POST_EDIT_URL, self.authorized_client, self.POST_DETAIL_URL],
+            [POST_CREATE_URL, self.guest, POST_CREATE_REDIRECT],
+            [self.POST_EDIT_URL, self.guest, self.POST_EDIT_REDIRECT],
+            [self.POST_EDIT_URL, self.another, self.POST_DETAIL_URL],
         ]
         for url, client, redirect in urls_redirect:
             with self.subTest(url=url, client=client, redirect=redirect):
@@ -78,20 +78,12 @@ class PostURLTests(TestCase):
 
     def test_urls_uses_correct_templates(self):
         template_url_names = [
-            [INDEX_URL, self.guest_client, 'posts/index.html'],
-            [PROFILE_URL, self.guest_client, 'posts/profile.html'],
-            [self.POST_DETAIL_URL,
-             self.guest_client,
-             'posts/post_detail.html'],
-            [POST_CREATE_URL,
-             self.authorized_client_author,
-             'posts/create_post.html'],
-            [GROUP_LIST_URL,
-             self.authorized_client_author,
-             'posts/group_list.html'],
-            [self.POST_EDIT_URL,
-             self.authorized_client_author,
-             'posts/create_post.html']
+            [INDEX_URL, self.guest, 'posts/index.html'],
+            [PROFILE_URL, self.guest, 'posts/profile.html'],
+            [self.POST_DETAIL_URL, self.guest, 'posts/post_detail.html'],
+            [POST_CREATE_URL, self.author, 'posts/create_post.html'],
+            [GROUP_LIST_URL, self.author, 'posts/group_list.html'],
+            [self.POST_EDIT_URL, self.author, 'posts/create_post.html']
         ]
         for url, client, template in template_url_names:
             with self.subTest(url=url, client=client, template=template):

@@ -70,18 +70,8 @@ class PostFormTests(TestCase):
         self.assertEqual(post.text, form_data['text'])
         self.assertEqual(post.author, self.post_author)
         self.assertEqual(post.group.id, form_data['group'])
-        self.assertTrue(
-            Post.objects.filter(
-                group=self.group.id,
-                text=POST_TEXT,
-            ).exists())
 
     def test_authorized_client_edit_post(self):
-        post = Post.objects.create(
-            text=POST_TEXT,
-            author=self.post_author,
-            group=self.group,
-        )
         form_data = {
             'text': POST_TEXT_NEW,
             'group': self.group2.id,
@@ -98,11 +88,10 @@ class PostFormTests(TestCase):
         self.assertEqual(response.status_code, 200)
         post = response.context['post']
         self.assertTrue(post.text, form_data['text'])
-        self.assertTrue(post.author, self.post_author)
+        self.assertTrue(post.author, self.post.author)
         self.assertTrue(post.group.id, form_data['group'])
 
     def test_guest_client_create_post(self):
-        posts_count = Post.objects.count()
         form_data = {
             'text': POST_TEXT,
             'group': self.group.id,
@@ -114,4 +103,4 @@ class PostFormTests(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertRedirects(response, REDIRECT_URL)
-        self.assertEqual(Post.objects.count(), posts_count)
+        self.assertEqual(Post.objects.count(), len(Post.objects.all()))
