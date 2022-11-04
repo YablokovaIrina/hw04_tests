@@ -75,7 +75,8 @@ class PostPagesTests(TestCase):
         self.assertEqual(response.context['group'], self.group)
         self.assertEqual(self.group.title, response.context['group'].title)
         self.assertEqual(self.group.slug, response.context['group'].slug)
-        self.assertEqual(self.group.description,
+        self.assertEqual(
+            self.group.description,
             response.context['group'].description
         )
 
@@ -85,7 +86,7 @@ class PostPagesTests(TestCase):
         )
         self.assertEqual(response.context['author'], self.user)
 
-    def test_detail_page_show_correct_context(self): 
+    def test_detail_page_show_correct_context(self):
         response = self.authorized_client.get(
             self.POST_DETAIL_URL
         )
