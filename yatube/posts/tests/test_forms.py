@@ -51,7 +51,6 @@ class PostFormTests(TestCase):
 
     def test_authorized_client_create_post(self):
         Post.objects.all().delete()
-        posts_count = Post.objects.count()
         form_data = {
             'text': POST_TEXT,
             'group': self.group.id,
@@ -65,7 +64,7 @@ class PostFormTests(TestCase):
             response,
             PROFILE_URL
         )
-        self.assertEqual(Post.objects.count(), posts_count + 1)
+        self.assertEqual(Post.objects.count(), 1)
         post = Post.objects.get()
         self.assertEqual(post.text, form_data['text'])
         self.assertEqual(post.author, self.post_author)
@@ -103,4 +102,4 @@ class PostFormTests(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertRedirects(response, REDIRECT_URL)
-        self.assertEqual(Post.objects.count(), len(Post.objects.all()))
+        self.assertEqual(Post.objects.count(), 1)

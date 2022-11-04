@@ -16,6 +16,11 @@ PROFILE_URL = reverse('posts:profile', args=[USERNAME])
 POSTS_ON_OTHER_PAGE = 3
 SECOND_PAGE = '?page=2'
 
+GROUP_TITLE_OTHER = 'Другая группа'
+GROUP_SLUG_OTHER = 'test_slug_other'
+GROUP_DESCRIPTION_OTHER = 'Тестовая группа 2'
+GROUP_LIST_URL_OTHER = reverse('posts:group_list', args=[GROUP_SLUG_OTHER])
+
 
 class PostPagesTests(TestCase):
     @classmethod
@@ -26,6 +31,11 @@ class PostPagesTests(TestCase):
             title=GROUP_TITLE,
             slug=GROUP_SLUG,
             description=GROUP_DESCRIPTION,
+        )
+        cls.group2 = Group.objects.create(
+            title=GROUP_TITLE_OTHER,
+            slug=GROUP_SLUG_OTHER,
+            description=GROUP_DESCRIPTION_OTHER,
         )
         cls.post = Post.objects.create(
             text=POST_TEXT,
@@ -63,9 +73,11 @@ class PostPagesTests(TestCase):
             GROUP_LIST_URL
         )
         self.assertEqual(response.context['group'], self.group)
-        self.assertEqual(self.group.title, GROUP_TITLE)
-        self.assertEqual(self.group.slug, GROUP_SLUG)
-        self.assertEqual(self.group.description, GROUP_DESCRIPTION)
+        self.assertEqual(self.group.title, response.context['group'].title)
+        self.assertEqual(self.group.slug, response.context['group'].slug)
+        self.assertEqual(self.group.description,
+            response.context['group'].description
+        )
 
     def test_profile_page_show_correct_context(self):
         response = self.authorized_client.get(
@@ -73,17 +85,23 @@ class PostPagesTests(TestCase):
         )
         self.assertEqual(response.context['author'], self.user)
 
-    def test_detail_page_show_correct_context(self):
+    def test_detail_page_show_correct_context(self): 
         response = self.authorized_client.get(
-            self.POST_DETAIL_URL)
+            self.POST_DETAIL_URL
+        )
         self.check_post_info(response.context['post'])
+
+    def test_post_is_not_in_group(self):
+        response = self.authorized_client.get(
+            GROUP_LIST_URL_OTHER
+        )
+        self.assertNotIn(self.post, response.context['page_obj'])
 
     def test_paginator_on_pages(self):
         Post.objects.all().delete()
-        POSTS_NUM = POSTS_ON_PAGE + POSTS_ON_OTHER_PAGE
         Post.objects.bulk_create(
             Post(text=f'Post {i}', author=self.user, group=self.group)
-            for i in range(POSTS_NUM)
+            for i in range(POSTS_ON_PAGE + POSTS_ON_OTHER_PAGE)
         )
         pages_and_records = {
             INDEX_URL: POSTS_ON_PAGE,
