@@ -91,6 +91,7 @@ class PostFormTests(TestCase):
         self.assertTrue(post.group.id, form_data['group'])
 
     def test_guest_client_create_post(self):
+        Post.objects.all().delete()
         form_data = {
             'text': POST_TEXT,
             'group': self.group.id,
@@ -102,4 +103,4 @@ class PostFormTests(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertRedirects(response, REDIRECT_URL)
-        self.assertEqual(Post.objects.count(), 1)
+        self.assertEqual(Post.objects.count(), 0)

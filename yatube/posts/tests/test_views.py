@@ -69,16 +69,11 @@ class PostPagesTests(TestCase):
                 self.check_post_info(response.context['page_obj'][0])
 
     def test_groups_page_show_correct_context(self):
-        response = self.authorized_client.get(
-            GROUP_LIST_URL
-        )
-        self.assertEqual(response.context['group'], self.group)
-        self.assertEqual(self.group.title, response.context['group'].title)
-        self.assertEqual(self.group.slug, response.context['group'].slug)
-        self.assertEqual(
-            self.group.description,
-            response.context['group'].description
-        )
+        group = self.authorized_client.get(GROUP_LIST_URL).context['group']
+        self.assertEqual(self.group.id, group.id)
+        self.assertEqual(self.group.title, group.title)
+        self.assertEqual(self.group.slug, group.slug)
+        self.assertEqual(self.group.description, group.description)
 
     def test_profile_page_show_correct_context(self):
         response = self.authorized_client.get(
